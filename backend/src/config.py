@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://username:password@localhost:5432/todo_app"
     jwt_secret: str = "your-super-secret-jwt-secret-key-change-in-production"
     jwt_expiry_days: int = 7
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: List[str] = ["https://todo-app-phase-ii-kappa.vercel.app/", "http://localhost:3000", "http://localhost:3001"]
 
     model_config = SettingsConfigDict(
         env_file=".env",
