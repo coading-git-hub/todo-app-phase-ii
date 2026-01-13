@@ -201,8 +201,33 @@ todo-app-phase-ii/
 
 ## Deployment
 
-- Frontend: Deploy to Vercel
-- Backend: Deploy to Railway or Fly.io
+### Backend Deployment (Railway/Fly.io)
+1. Create account on Railway or Fly.io
+2. Connect your GitHub repository
+3. Set environment variables in deployment settings:
+   - `DATABASE_URL`: Your Neon PostgreSQL connection string
+   - `JWT_SECRET`: Secure random string (32+ characters)
+   - `JWT_EXPIRY_DAYS`: 7
+   - `CORS_ORIGINS`: Your frontend URL (e.g., https://your-app.vercel.app)
+4. Deploy automatically from GitHub
+
+### Frontend Deployment (Vercel)
+1. Create account on Vercel
+2. Connect your GitHub repository
+3. Set environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_API_URL`: Your backend URL (e.g., https://your-backend.fly.dev)
+4. Deploy automatically from GitHub
+
+### Environment Variables Summary
+
+**Backend (.env):**
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret key for JWT
+- `JWT_EXPIRY_DAYS`: Token expiry (default: 7)
+- `CORS_ORIGINS`: Allowed frontend origins
+
+**Frontend (.env.local):**
+- `NEXT_PUBLIC_API_URL`: Backend API base URL
 
 ## Troubleshooting
 
