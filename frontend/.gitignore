@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env.local
+.env.production
+.env.local.example
+
+# Next.js
+.next/
+out/
+
+# Next.js build output
+dist/
+
+# Production build
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+coverage/
+junit.xml
+*.log
+
+# Local configuration
+.env.local
+.env.production
+.env.test

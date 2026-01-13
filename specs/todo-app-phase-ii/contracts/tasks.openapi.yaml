@@ -1,0 +1,465 @@
+openapi: 3.0.3
+info:
+  title: Phase II Todo App - Tasks API
+  description: |
+    Task CRUD endpoints for authenticated users to manage their personal todo tasks.
+
+    **Security Model**:
+    - All endpoints require JWT authentication via Authorization header
+    - Users can only access/modify their own tasks (user_id isolation)
+    - Unauthorized requests return 401
+    - Cross-user access attempts return 403/404
+
+    **Base URL**: `http://localhost:8000` (development) | `https://api.your-domain.com` (production)
+  version: 1.0.0
+  contact:
+    name: Phase II Todo Team
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api-todo-phase-ii.railway.app
+    description: Production server (Railway)
+
+tags:
+  - name: Tasks
+    description: Todo task management operations (CRUD)
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/tasks:
+    get:
+      tags:
+        - Tasks
+      summary: Get all tasks for authenticated user
+      description: |
+        Retrieves all tasks owned by the authenticated user, ordered by creation date (newest first).
+
+        **Authorization**:
+        - Requires valid JWT token in Authorization header
+        - Only returns tasks where task.user_id == authenticated user
+
+        **Response**:
+        - Empty array if user has no tasks
+        - Tasks sorted by created_at DESC
+      operationId: getTasks
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+              examples:
+                withTasks:
+                  summary: User with multiple tasks
+                  value:
+                    tasks:
+                      - id: 1
+                        user_id: 1
+                        title: Complete Phase II implementation
+                        description: Build full-stack todo app with authentication
+                        completed: false
+                        created_at: "2026-01-02T10:00:00Z"
+                        updated_at: "2026-01-02T10:00:00Z"
+                      - id: 2
+                        user_id: 1
+                        title: Write documentation
+                        description: null
+                        completed: true
+                        created_at: "2026-01-02T09:00:00Z"
+                        updated_at: "2026-01-02T11:00:00Z"
+                emptyTasks:
+                  summary: User with no tasks
+                  value:
+                    tasks: []
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: |
+        Creates a new task for the authenticated user.
+
+        **Validation**:
+        - Title is required (1-200 characters)
+        - Description is optional (max 2000 characters)
+        - Task automatically associated with authenticated user_id
+
+        **Response**:
+        - Returns the created task with auto-generated id and timestamps
+      operationId: createTask
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+            examples:
+              withDescription:
+                summary: Task with description
+                value:
+                  title: Buy groceries
+                  description: Milk, eggs, bread, and coffee
+              titleOnly:
+                summary: Task without description
+                value:
+                  title: Call dentist
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                created:
+                  value:
+                    task:
+                      id: 3
+                      user_id: 1
+                      title: Buy groceries
+                      description: Milk, eggs, bread, and coffee
+                      completed: false
+                      created_at: "2026-01-02T12:00:00Z"
+                      updated_at: "2026-01-02T12:00:00Z"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingTitle:
+                  value:
+                    error: Title is required
+                titleTooLong:
+                  value:
+                    error: Title must not exceed 200 characters
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/tasks/{id}:
+    put:
+      tags:
+        - Tasks
+      summary: Update an existing task
+      description: |
+        Updates a task's title, description, or completion status.
+
+        **Authorization**:
+        - User can only update their own tasks
+        - Returns 403/404 if task doesn't belong to authenticated user
+
+        **Validation**:
+        - Title: 1-200 characters (if provided)
+        - Description: max 2000 characters (if provided)
+        - Completed: boolean (if provided)
+        - At least one field must be provided
+
+        **Behavior**:
+        - updated_at timestamp automatically updated
+        - Only provided fields are modified (partial update)
+      operationId: updateTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Task ID to update
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+            examples:
+              markCompleted:
+                summary: Mark task as completed
+                value:
+                  completed: true
+              updateTitle:
+                summary: Update title only
+                value:
+                  title: Buy groceries and pharmacy items
+              fullUpdate:
+                summary: Update all fields
+                value:
+                  title: Complete Phase II with tests
+                  description: Include unit and integration tests
+                  completed: false
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                updated:
+                  value:
+                    task:
+                      id: 1
+                      user_id: 1
+                      title: Complete Phase II with tests
+                      description: Include unit and integration tests
+                      completed: false
+                      created_at: "2026-01-02T10:00:00Z"
+                      updated_at: "2026-01-02T13:00:00Z"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidData:
+                  value:
+                    error: Invalid data
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - task belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    error: Task not found
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: Task not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      description: |
+        Permanently deletes a task.
+
+        **Authorization**:
+        - User can only delete their own tasks
+        - Returns 403/404 if task doesn't belong to authenticated user
+
+        **Behavior**:
+        - Task is permanently removed from database
+        - Returns 204 No Content on success
+        - Idempotent: deleting non-existent task returns 404
+      operationId: deleteTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Task ID to delete
+          example: 1
+      responses:
+        '204':
+          description: Task deleted successfully (no content)
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - task belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  value:
+                    error: Task not found
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: Task not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TaskCreateRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Buy groceries
+          description: Task title (required)
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: Milk, eggs, bread, and coffee
+          description: Optional task description
+
+    TaskUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Buy groceries and pharmacy items
+          description: Updated task title
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: Updated description
+          description: Updated task description
+        completed:
+          type: boolean
+          example: true
+          description: Task completion status
+      minProperties: 1
+      description: At least one field must be provided
+
+    TaskRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: Unique task identifier
+        user_id:
+          type: integer
+          example: 1
+          description: Owner user ID
+        title:
+          type: string
+          example: Complete Phase II implementation
+          description: Task title
+        description:
+          type: string
+          nullable: true
+          example: Build full-stack todo app with authentication
+          description: Task description (optional)
+        completed:
+          type: boolean
+          example: false
+          description: Completion status
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-02T10:00:00Z"
+          description: Creation timestamp (ISO 8601)
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-01-02T10:00:00Z"
+          description: Last modification timestamp (ISO 8601)
+
+    TaskListResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRead'
+          description: List of tasks (ordered by created_at DESC)
+
+    TaskResponse:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/TaskRead'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Error message describing the problem
+          description: Human-readable error message
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from /api/auth/signin endpoint.
+        Include in Authorization header: `Authorization: Bearer <token>`
+
+        **Token Structure**:
+        - Algorithm: HS256
+        - Payload: { sub: user_id, exp: expiry_timestamp }
+        - Expiry: 7 days
