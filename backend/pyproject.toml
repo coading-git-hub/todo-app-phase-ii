@@ -1,3 +1,9 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "A FastAPI backend"
+requires-python = ">=3.9"
+
 [tool.black]
 line-length = 88
 target-version = ['py311']

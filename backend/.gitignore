@@ -60,3 +60,4 @@ logs/
 # Coverage
 .coverage*
 coverage.xml
+.vercel
