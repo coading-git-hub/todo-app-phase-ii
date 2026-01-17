@@ -57,7 +57,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       let errorMessage = 'An error occurred during authentication';
       
       if (err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
-        errorMessage = 'Cannot connect to the server. Please make sure the backend is running on http://localhost:8000';
+        errorMessage = 'Cannot connect to the server. Please make sure the backend is running on https://kiran-ahmed-todo-phase-ii.hf.space';
       } else if (err.response?.status === 401) {
         errorMessage = err.response?.data?.detail || 'Invalid email or password';
       } else if (err.response?.status === 400) {
