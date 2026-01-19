@@ -22,7 +22,7 @@ export function TaskList() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/tasks');
+      const response = await apiClient.get('/tasks/');
       setTasks(response.data);
     } catch (error) {
       console.error('Error fetching tasks:', error);

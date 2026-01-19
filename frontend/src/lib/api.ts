@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -9,6 +9,8 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+console.log('API baseURL set to:', `${API_BASE_URL}/api`);
 
 // Request interceptor to add token
 apiClient.interceptors.request.use(
@@ -31,12 +33,15 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error.response || error.message || error);
     if (error.response?.status === 401) {
       // Clear token and redirect to login (only in browser)
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         window.location.href = '/signin';
       }
+    } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+      console.error('Network error - unable to reach the server. Please check the backend is deployed and accessible.');
     }
     return Promise.reject(error);
   }

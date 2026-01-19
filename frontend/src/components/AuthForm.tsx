@@ -27,17 +27,32 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (isSignup) {
+        console.log('Attempting signup for email:', email);
         if (password !== confirmPassword) {
+          console.log('Signup failed: passwords do not match');
           addToast('Passwords do not match', 'error');
           setLoading(false);
           return;
         }
 
         // Call signup API
-        await apiClient.post('/auth/signup', { email, password });
+        console.log('Calling signup API');
+        const signupResponse = await apiClient.post('/auth/signup', { email, password });
+        console.log('Signup API response:', signupResponse);
         addToast('Account created successfully!', 'success');
+
+        // Auto-login after successful signup
+        console.log('Auto-logging in after signup');
+        const signinResponse = await apiClient.post('/auth/signin', { email, password });
+        const { access_token } = signinResponse.data;
+
+        // Store token and user email in localStorage
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('userEmail', email);
+        console.log('Auto-login successful, token stored');
       } else {
         // Call signin API
+        console.log('Calling signin API');
         const response = await apiClient.post('/auth/signin', { email, password });
         const { access_token } = response.data;
 
@@ -52,7 +67,8 @@ export function AuthForm({ mode }: AuthFormProps) {
       router.refresh();
     } catch (err: any) {
       console.error('Auth error:', err);
-      
+      console.log('Error details:', err.response?.data, err.response?.status);
+
       // Better error handling with more specific messages
       let errorMessage = 'An error occurred during authentication';
       

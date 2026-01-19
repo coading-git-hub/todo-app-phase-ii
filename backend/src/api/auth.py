@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from ..utils.sanitization import sanitize_email
 
+import logging
+
 
 router = APIRouter()
 
@@ -22,10 +24,11 @@ async def signup(user_create: UserCreate, session: AsyncSession = Depends(get_as
         result = await session.execute(select(User).where(User.email == sanitized_email))
         existing_user = result.scalar_one_or_none()
         if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already exists"
-            )
+          logging.warning("Signup failed: email already exists: %s", sanitized_email)
+          raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already exists"
+          )
 
         # Create new user - need to use async session properly
         hashed_password = hash_password(user_create.password)
@@ -60,11 +63,12 @@ async def signin(user_signin: UserSignIn, session: AsyncSession = Depends(get_as
         user = result.scalar_one_or_none()
 
         if not user or not verify_password(user_signin.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+          logging.warning("Invalid credentials for email: %s", sanitized_email)
+          raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+          )
 
         # Create access token
         access_token_expires = timedelta(days=7)  # 7 days expiry
