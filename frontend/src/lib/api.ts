@@ -1,6 +1,7 @@
+
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://kiran-ahmed-todo-phase-ii.hf.space';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -8,6 +9,8 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable withCredentials to handle cookies and authentication properly
+  withCredentials: true
 });
 
 console.log('API baseURL set to:', `${API_BASE_URL}/api`);

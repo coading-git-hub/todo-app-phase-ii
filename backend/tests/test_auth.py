@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
-from backend.src.main import app
-from backend.src.models.user import User
-from backend.src.db.database import get_async_session
+from src.main import app
+from src.models.user import User
+from src.db.database import get_async_session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from unittest.mock import AsyncMock

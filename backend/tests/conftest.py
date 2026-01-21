@@ -2,15 +2,15 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
-from backend.src.main import app
-from backend.src.db.database import AsyncSessionLocal
+from src.main import app
+from src.db.database import AsyncSessionLocal
 from httpx import AsyncClient
 
 
 # Create test database engine
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-@pytest.asyncio.fixture
+@pytest.fixture
 async def async_client():
     # Create tables in test database
     engine = create_async_engine(TEST_DATABASE_URL)

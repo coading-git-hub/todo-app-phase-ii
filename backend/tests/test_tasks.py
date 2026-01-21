@@ -1,10 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
-from backend.src.main import app
-from backend.src.models.user import User
-from backend.src.models.task import Task
-from backend.src.services.auth import create_access_token
+from src.main import app
+from src.models.user import User
+from src.models.task import Task
+from src.services.auth import create_access_token
 from datetime import timedelta
 import uuid
 

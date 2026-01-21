@@ -1,74 +1,78 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
+from datetime import datetime
+
 from ..models.task import Task, TaskCreate, TaskUpdate, TaskRead
 from ..models.user import User
 from ..middleware.jwt_auth import verify_token
 from ..db.database import get_async_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
 from ..utils.sanitization import sanitize_title, sanitize_description
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/tasks",
+    tags=["tasks"]
+)
 
 
+# =========================
+# GET ALL TASKS
+# =========================
 @router.get("/", response_model=list[TaskRead])
 async def get_tasks(
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Get all tasks for the authenticated user."""
     result = await session.execute(
         select(Task).where(Task.user_id == current_user.id)
     )
-    tasks = result.scalars().all()
-    return tasks
+    return result.scalars().all()
 
 
+# =========================
+# CREATE TASK
+# =========================
 @router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task_create: TaskCreate,
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Create a new task for the authenticated user."""
-    # Sanitize inputs
-    sanitized_title = sanitize_title(task_create.title)
-    sanitized_description = sanitize_description(task_create.description) if task_create.description else None
+    title = sanitize_title(task_create.title)
+    description = (
+        sanitize_description(task_create.description)
+        if task_create.description
+        else None
+    )
 
-    # Validate input
-    if not sanitized_title or len(sanitized_title.strip()) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Title is required"
-        )
+    if not title or not title.strip():
+        raise HTTPException(status_code=400, detail="Title is required")
 
-    if len(sanitized_title) > 200:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Title must be at most 200 characters"
-        )
+    if len(title) > 200:
+        raise HTTPException(status_code=400, detail="Title max 200 characters")
 
-    if sanitized_description and len(sanitized_description) > 2000:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Description must be at most 2000 characters"
-        )
+    if description and len(description) > 2000:
+        raise HTTPException(status_code=400, detail="Description max 2000 characters")
 
-    # Create task
-    db_task = Task(
-        title=sanitized_title,
-        description=sanitized_description,
+    task = Task(
+        title=title,
+        description=description,
         completed=False,
         user_id=current_user.id
     )
-    session.add(db_task)
+
+    session.add(task)
     await session.commit()
-    await session.refresh(db_task)
+    await session.refresh(task)
 
-    return db_task
+    return task
 
 
+# =========================
+# UPDATE TASK
+# =========================
 @router.put("/{task_id}", response_model=TaskRead)
 async def update_task(
     task_id: UUID,
@@ -76,68 +80,61 @@ async def update_task(
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Update a task for the authenticated user."""
-    # Get the task
     result = await session.execute(
-        select(Task).where(Task.id == task_id).where(Task.user_id == current_user.id)
+        select(Task)
+        .where(Task.id == task_id)
+        .where(Task.user_id == current_user.id)
     )
-    db_task = result.scalar_one_or_none()
+    task = result.scalar_one_or_none()
 
-    if not db_task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
 
-    # Update task fields if provided
-    update_data = task_update.dict(exclude_unset=True)
-    if not update_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At least one field must be provided for update"
-        )
+    update_data = task_update.model_dump(exclude_unset=True)
 
-    # Sanitize inputs before updating
-    for field, value in update_data.items():
-        if field == "title" and value is not None:
-            update_data[field] = sanitize_title(value)
-        elif field == "description" and value is not None:
-            update_data[field] = sanitize_description(value)
+    if "title" in update_data:
+        title = sanitize_title(update_data["title"])
+        if not title.strip():
+            raise HTTPException(status_code=400, detail="Title cannot be empty")
+        if len(title) > 200:
+            raise HTTPException(status_code=400, detail="Title max 200 characters")
+        task.title = title
 
-    for field, value in update_data.items():
-        setattr(db_task, field, value)
+    if "description" in update_data:
+        description = sanitize_description(update_data["description"])
+        if description and len(description) > 2000:
+            raise HTTPException(status_code=400, detail="Description max 2000 characters")
+        task.description = description
 
-    # Update timestamp
-    from datetime import datetime
-    db_task.updated_at = datetime.utcnow()
+    if "completed" in update_data:
+        task.completed = update_data["completed"]
+
+    task.updated_at = datetime.utcnow()
 
     await session.commit()
-    await session.refresh(db_task)
+    await session.refresh(task)
 
-    return db_task
+    return task
 
 
+# =========================
+# DELETE TASK
+# =========================
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: UUID,
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Delete a task for the authenticated user."""
-    # Get the task
     result = await session.execute(
-        select(Task).where(Task.id == task_id).where(Task.user_id == current_user.id)
+        select(Task)
+        .where(Task.id == task_id)
+        .where(Task.user_id == current_user.id)
     )
-    db_task = result.scalar_one_or_none()
+    task = result.scalar_one_or_none()
 
-    if not db_task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
 
-    # Delete the task
-    await session.delete(db_task)
+    await session.delete(task)
     await session.commit()
-
-    return

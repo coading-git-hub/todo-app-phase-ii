@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 if TYPE_CHECKING:
-    from .user import User
+ from .user import User
 
 
 class TaskBase(SQLModel):

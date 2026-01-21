@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
   transpilePackages: ['better-auth'],
-  outputFileTracingRoot: require('path').join(__dirname),
+
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000'],
+      allowedOrigins: [
+        'https://todo-app-phase-ii-jt2k.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        
+      ],
     },
   },
 }

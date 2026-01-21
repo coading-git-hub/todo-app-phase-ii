@@ -1,3 +1,4 @@
+
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Todo API", version="1.0.0")
+    app = FastAPI(title="Todo API", version="1.0.0", redirect_slashes=False)
 
     @app.on_event("startup")
     async def on_startup():
@@ -39,17 +40,15 @@ def create_app() -> FastAPI:
 
     # CORS middleware
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins_list,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        max_age=3600,  # Cache preflight requests for 1 hour
-    )
-
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
     # Include routers
     app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-    app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
+    app.include_router(tasks.router, prefix="/api")
 
     @app.get("/")
     def root():
@@ -65,8 +64,8 @@ def create_app() -> FastAPI:
                     "signin": "/api/auth/signin"
                 },
                 "tasks": {
-                    "list": "GET /api/tasks",
-                    "create": "POST /api/tasks",
+                    "list": "GET /api/tasks/",
+                    "create": "POST /api/tasks/",
                     "update": "PUT /api/tasks/{task_id}",
                     "delete": "DELETE /api/tasks/{task_id}"
                 }

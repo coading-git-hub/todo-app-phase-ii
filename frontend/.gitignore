@@ -5,6 +5,7 @@ node_modules/
 .env.local
 .env.production
 .env.local.example
+.env
 
 # Next.js
 .next/

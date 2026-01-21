@@ -46,7 +46,7 @@ export function TaskForm({ task, onTaskCreated, onTaskUpdated, onCancel }: TaskF
         addToast('Task updated successfully!', 'success');
       } else {
         // Create new task
-        const response = await apiClient.post('/tasks', {
+        const response = await apiClient.post('/tasks/', {
           title,
           description,
           completed
