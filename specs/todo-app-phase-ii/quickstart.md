@@ -165,7 +165,7 @@ INFO:     Application startup complete.
 ```
 
 **Test backend**:
-Open http://localhost:8000/docs to see interactive API documentation.
+Open https://kiran-ahmed-todo-phase-3.hf.space/docs to see interactive API documentation.
 
 ---
 
@@ -201,7 +201,7 @@ Create a `.env.local` file in the `frontend/` directory:
 
 ```bash
 # frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://kiran-ahmed-todo-phase-3.hf.space
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -230,7 +230,7 @@ info  - automatically enabled Fast Refresh for 1 custom loader
 ### 5.1 Backend Health Check
 
 ```bash
-curl http://localhost:8000/docs
+curl https://kiran-ahmed-todo-phase-3.hf.space/docs
 ```
 
 **Expected**: Should return HTML for Swagger UI.
@@ -322,7 +322,7 @@ npm install
 
 **Solution**:
 - Check browser console for errors
-- Verify backend is running (http://localhost:8000/docs)
+- Verify backend is running (https://kiran-ahmed-todo-phase-3.hf.space/docs)
 - Check Network tab for API request status
 - Ensure JWT token is included in Authorization header
 
@@ -440,7 +440,7 @@ todo-app-phase-ii/
 
 After completing the quickstart:
 
-1. **Explore API Documentation**: http://localhost:8000/docs
+1. **Explore API Documentation**: https://kiran-ahmed-todo-phase-3.hf.space/docs
 2. **Review Specifications**: See `specs/todo-app-phase-ii/spec.md`
 3. **Run Tests**: Execute backend and frontend test suites
 4. **Implement Features**: Follow the task breakdown in `tasks.md` (generated via `/sp.tasks`)
@@ -465,7 +465,7 @@ If you encounter issues not covered in troubleshooting:
 
 1. Check backend logs (terminal running `uvicorn`)
 2. Check frontend console (browser DevTools)
-3. Review API documentation: http://localhost:8000/docs
+3. Review API documentation: https://kiran-ahmed-todo-phase-3.hf.space/docs
 4. Check Neon database status in console
 5. Consult project specifications in `specs/todo-app-phase-ii/`
 

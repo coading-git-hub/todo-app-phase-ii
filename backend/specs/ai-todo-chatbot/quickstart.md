@@ -61,13 +61,13 @@ python -c "from src.db.session import create_db_and_tables; create_db_and_tables
 uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `https://kiran-ahmed-todo-phase-3.hf.space`
 
 ## API Usage Examples
 
 ### 1. User Registration
 ```bash
-curl -X POST "http://localhost:8000/api/auth/signup" \
+curl -X POST "https://kiran-ahmed-todo-phase-3.hf.space/api/auth/signup" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -77,7 +77,7 @@ curl -X POST "http://localhost:8000/api/auth/signup" \
 
 ### 2. User Login
 ```bash
-curl -X POST "http://localhost:8000/api/auth/signin" \
+curl -X POST "https://kiran-ahmed-todo-phase-3.hf.space/api/auth/signin" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -89,7 +89,7 @@ Save the returned JWT token for subsequent API calls.
 
 ### 3. Create a Task
 ```bash
-curl -X POST "http://localhost:8000/api/tasks/" \
+curl -X POST "https://kiran-ahmed-todo-phase-3.hf.space/api/tasks/" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,13 +101,13 @@ curl -X POST "http://localhost:8000/api/tasks/" \
 
 ### 4. Get All Tasks
 ```bash
-curl -X GET "http://localhost:8000/api/tasks/" \
+curl -X GET "https://kiran-ahmed-todo-phase-3.hf.space/api/tasks/" \
   -H "Authorization: Bearer <your-jwt-token>"
 ```
 
 ### 5. Interact with AI Chat
 ```bash
-curl -X POST "http://localhost:8000/api/chat" \
+curl -X POST "https://kiran-ahmed-todo-phase-3.hf.space/api/chat" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -174,8 +174,8 @@ mypy src/
 - Ensure frontend URLs match the configured origins
 
 ## API Documentation
-- Interactive API docs available at `http://localhost:8000/docs`
-- Alternative Redoc interface at `http://localhost:8000/redoc`
+- Interactive API docs available at `https://kiran-ahmed-todo-phase-3.hf.space/docs`
+- Alternative Redoc interface at `https://kiran-ahmed-todo-phase-3.hf.space/redoc`
 
 ## Environment Variables Reference
 - `DATABASE_URL`: Database connection string

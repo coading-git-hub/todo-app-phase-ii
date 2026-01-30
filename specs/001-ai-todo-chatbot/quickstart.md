@@ -71,7 +71,7 @@ yarn install
 ### 3. Configure Environment Variables
 Create a `.env.local` file in the frontend root:
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:8000"
+NEXT_PUBLIC_API_URL="https://kiran-ahmed-todo-phase-3.hf.space"
 NEXT_PUBLIC_CHATKIT_API_KEY="your-chatkit-api-key-if-using"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
@@ -106,8 +106,8 @@ mcp-server --config ./mcp-config.json
 ## Testing the Application
 
 ### 1. API Testing
-- Backend API documentation available at: `http://localhost:8000/docs`
-- Test the chat endpoint: `POST http://localhost:8000/api/{user_id}/chat`
+- Backend API documentation available at: `https://kiran-ahmed-todo-phase-3.hf.space/docs`
+- Test the chat endpoint: `POST https://kiran-ahmed-todo-phase-3.hf.space/api/{user_id}/chat`
 
 ### 2. Frontend Testing
 - Open browser to: `http://localhost:3000`

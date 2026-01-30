@@ -521,7 +521,7 @@ CORS_ORIGINS=http://localhost:3000,https://your-frontend.vercel.app
 
 **Frontend** (`frontend/.env.local`):
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://kiran-ahmed-todo-phase-3.hf.space
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 

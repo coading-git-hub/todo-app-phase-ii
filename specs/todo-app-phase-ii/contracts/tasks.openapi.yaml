@@ -10,15 +10,15 @@ info:
     - Unauthorized requests return 401
     - Cross-user access attempts return 403/404
 
-    **Base URL**: `http://localhost:8000` (development) | `https://api.your-domain.com` (production)
+    **Base URL**: `https://kiran-ahmed-todo-phase-3.hf.space` (deployment) | `https://api.your-domain.com` (production)
   version: 1.0.0
   contact:
     name: Phase II Todo Team
     email: support@example.com
 
 servers:
-  - url: http://localhost:8000
-    description: Local development server
+  - url: https://kiran-ahmed-todo-phase-3.hf.space
+    description: Deployment server
   - url: https://api-todo-phase-ii.railway.app
     description: Production server (Railway)
 

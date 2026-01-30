@@ -49,7 +49,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         # "https://todo-app-phase-ii-jt2k.vercel.app",
-        "http://localhost:8000",  # Allow self-requests if needed
+        "https://kiran-ahmed-todo-phase-3.hf.space",  # Allow requests from frontend
         "https://kiran-ahmed-todo-phase-ii.hf.space",  # Allow Hugging Face Space
         "*"  # Allow all origins during development (consider restricting in production)
     ],  # Frontend URL

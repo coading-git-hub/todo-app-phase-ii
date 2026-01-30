@@ -3,7 +3,7 @@ import requests
 # Test the backend API
 print("Testing backend API connection...")
 try:
-    response = requests.get("http://localhost:8000/")
+    response = requests.get("https://kiran-ahmed-todo-phase-3.hf.space/")
     if response.status_code == 200:
         print("✓ Backend API is accessible")
         data = response.json()
@@ -16,7 +16,7 @@ except Exception as e:
 
 # Test health endpoint
 try:
-    response = requests.get("http://localhost:8000/health")
+    response = requests.get("https://kiran-ahmed-todo-phase-3.hf.space/health")
     if response.status_code == 200:
         print("✓ Health check passed")
     else:

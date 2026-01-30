@@ -17,7 +17,7 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://kiran-ahmed-todo-phase-3.hf.space';
   }
 
   /**

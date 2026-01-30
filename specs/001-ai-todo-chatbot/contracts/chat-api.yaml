@@ -4,8 +4,8 @@ info:
   description: API for interacting with the AI-powered todo chatbot
   version: 1.0.0
 servers:
-  - url: http://localhost:8000
-    description: Development server
+  - url: https://kiran-ahmed-todo-phase-3.hf.space
+    description: Deployment server
 paths:
   /api/{user_id}/chat:
     post:
