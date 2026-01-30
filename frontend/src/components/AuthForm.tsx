@@ -44,21 +44,27 @@ export function AuthForm({ mode }: AuthFormProps) {
         // Auto-login after successful signup
         console.log('Auto-logging in after signup');
         const signinResponse = await apiClient.post('/auth/signin', { email, password });
-        const { access_token } = signinResponse.data;
+        const { access_token, user } = signinResponse.data;
 
-        // Store token and user email in localStorage
+        // Store token, user email, and user ID in localStorage
         localStorage.setItem('token', access_token);
         localStorage.setItem('userEmail', email);
+        if (user && user.id) {
+          localStorage.setItem('userId', user.id);
+        }
         console.log('Auto-login successful, token stored');
       } else {
         // Call signin API
         console.log('Calling signin API');
         const response = await apiClient.post('/auth/signin', { email, password });
-        const { access_token } = response.data;
+        const { access_token, user } = response.data;
 
-        // Store token and user email in localStorage
+        // Store token, user email, and user ID in localStorage
         localStorage.setItem('token', access_token);
         localStorage.setItem('userEmail', email);
+        if (user && user.id) {
+          localStorage.setItem('userId', user.id);
+        }
         addToast('Signed in successfully!', 'success');
       }
 
@@ -73,7 +79,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       let errorMessage = 'An error occurred during authentication';
       
       if (err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
-        errorMessage = 'Cannot connect to the server. Please make sure the backend is running on https://kiran-ahmed-todo-phase-ii.hf.space';
+        errorMessage = 'Cannot connect to the server. Please make sure the backend is running and accessible.';
       } else if (err.response?.status === 401) {
         errorMessage = err.response?.data?.detail || 'Invalid email or password';
       } else if (err.response?.status === 400) {

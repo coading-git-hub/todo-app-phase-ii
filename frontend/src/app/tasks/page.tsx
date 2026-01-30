@@ -5,7 +5,7 @@ import { TaskList } from '../../components/TaskList';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Button } from '../../components/ui/Button';
-import { LogOut, Home } from 'lucide-react';
+import { LogOut, Home, MessageSquare } from 'lucide-react';
 
 export default function TasksPage() {
   const router = useRouter();
@@ -30,14 +30,24 @@ export default function TasksPage() {
       {/* Header */}
       <motion.div className="bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Button
-            onClick={() => router.push('/')}
-            variant="ghost"
-            className="text-white"
-            icon={Home}
-          >
-            Home
-          </Button>
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={() => router.push('/')}
+              variant="ghost"
+              className="text-white"
+              icon={Home}
+            >
+              Home
+            </Button>
+            <Button
+              onClick={() => router.push('/chat')}
+              variant="ghost"
+              className="text-white"
+              icon={MessageSquare}
+            >
+              AI Assistant
+            </Button>
+          </div>
 
           <h1 className="text-2xl font-bold text-white">📋 My Tasks</h1>
 

@@ -1,57 +1,73 @@
-
-import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware import Middleware
-from sqlmodel import SQLModel
-from .api import auth, tasks
 from .config import settings
-from .middleware.logging import LoggingMiddleware
-from .db.database import async_engine
-# Import models to register them with SQLModel
-# Import from __init__.py to ensure proper relationship resolution
-from .models import Task, User
+from .api.chat import router as chat_router
+from .api.auth import router as auth_router
+from .api.tasks import router as tasks_router
+from .db.database_async import async_engine
+# Import models to ensure they are registered with SQLModel
+from .models.user import User
+from .models.task import Task
+from .models.conversation import Conversation
+from .models.message import Message
+from sqlmodel import SQLModel
+import logging
 
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
 
+# Add lifespan support for future compatibility
+from contextlib import asynccontextmanager
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="Todo API", version="1.0.0", redirect_slashes=False)
+async def create_db_and_tables():
+    """Create database tables based on SQLModel models asynchronously."""
+    try:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create database tables: {e}")
+        raise
 
-    @app.on_event("startup")
-    async def on_startup():
-        """Initialize database tables on startup."""
-        try:
-            async with async_engine.begin() as conn:
-                await conn.run_sync(SQLModel.metadata.create_all)
-            logger.info("Database tables initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize database tables: {e}")
-            logger.warning("Make sure your database is running and migrations are applied")
+@asynccontextmanager
+async def lifespan(app):
+    # Startup
+    await create_db_and_tables()
+    yield
+    # Shutdown (if needed)
 
-    # Add logging middleware first
-    app.add_middleware(LoggingMiddleware)
+# Create FastAPI app instance with lifespan
+app = FastAPI(
+    title=settings.APP_NAME,
+    debug=settings.debug,
+    lifespan=lifespan
+)
 
-    # CORS middleware
-    app.add_middleware(
+# Add CORS middleware
+app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        # "https://todo-app-phase-ii-jt2k.vercel.app",
+        "http://localhost:8000",  # Allow self-requests if needed
+        "https://kiran-ahmed-todo-phase-ii.hf.space",  # Allow Hugging Face Space
+        "*"  # Allow all origins during development (consider restricting in production)
+    ],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Expose headers that the frontend might need to access
+    expose_headers=["Authorization", "Content-Type", "Set-Cookie"],
 )
-    # Include routers
-    app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-    app.include_router(tasks.router, prefix="/api")
 
-    @app.get("/")
-    def root():
+# Include API routers
+app.include_router(chat_router, prefix="/api")
+app.include_router(auth_router, prefix="/api/auth")
+app.include_router(tasks_router, prefix="/api/tasks")
+app.include_router(tasks_router, prefix="/api/v1/tasks")  # Versioned API
+
+@app.get("/")
+def root():
         return {
             "message": "Welcome to Todo API",
             "version": "1.0.0",
@@ -64,26 +80,23 @@ def create_app() -> FastAPI:
                     "signin": "/api/auth/signin"
                 },
                 "tasks": {
-                    "list": "GET /api/tasks/",
-                    "create": "POST /api/tasks/",
+                    "list": "GET /api/tasks",
+                    "create": "POST /api/tasks",
                     "update": "PUT /api/tasks/{task_id}",
                     "delete": "DELETE /api/tasks/{task_id}"
+                },
+                "chat": {
+                    "ai_agent": "POST /api/v1/chat"
                 }
             }
         }
 
-    @app.get("/health")
-    def health_check():
-        return {"status": "healthy"}
-
-    @app.middleware("http")
-    async def log_requests(request, call_next):
-        logger.info(f"Request: {request.method} {request.url}")
-        response = await call_next(request)
-        logger.info(f"Response: {response.status_code}")
-        return response
-
-    return app
 
 
-app = create_app()
+# The lifespan context manager is already defined earlier
+# Database initialization happens in the lifespan context
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "app": settings.APP_NAME}

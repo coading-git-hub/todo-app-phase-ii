@@ -1,31 +1,48 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
+from typing import Optional
+import os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 class Settings(BaseSettings):
-    # Neon PostgreSQL database URL
-    # Get connection string from Neon Console -> Connection Details
-    # Format should be: postgresql+asyncpg://username:password@host:port/database?sslmode=require
-    database_url: str = "postgresql+asyncpg://username:password@localhost:5432/todo_app"
-    jwt_secret: str = "your-super-secret-jwt-secret-key-change-in-production"
-    jwt_expiry_days: int = 20
-    cors_origins: str="https://todo-app-phase-ii-jt2k.vercel.app,http://localhost:3000,http://localhost:3001,https://kiran-ahmed-todo-phase-ii.hf.space"
+    model_config = ConfigDict(extra='ignore', env_file=".env")
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=False,
-        env_ignore_empty=True
-    )
+    # Database settings
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./todo_app.db")
+    NEON_API_URL: Optional[str] = os.getenv("NEON_API_URL")
+
+    # JWT settings
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "your-super-secret-jwt-key-here-make-it-long-and-random")
+    JWT_EXPIRE_DAYS: int = int(os.getenv("JWT_EXPIRE_DAYS", "7"))
+
+    # Google Gemini settings
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
+    # OpenAI settings
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+    # Application settings
+    APP_NAME: str = "AI Todo Chatbot Backend"
+    API_V1_STR: str = "/api/v1"
+
+    # Alias the fields for backward compatibility
+    @property
+    def database_url(self):
+        return self.DATABASE_URL
 
     @property
-    def cors_origins_list(self) -> List[str]:
-        """Convert the comma-separated cors_origins string to a list."""
-        origins = [origin.strip() for origin in self.cors_origins.split(",")]
-        # Add wildcard for Hugging Face Spaces if needed
-        # This allows both http and https versions of the space
-        return origins
+    def jwt_secret(self):
+        return self.JWT_SECRET
 
+    @property
+    def jwt_expiry_days(self):
+        return self.JWT_EXPIRE_DAYS
+
+    @property
+    def debug(self):
+        return os.getenv("DEBUG", "False").lower() == "true"
 
 settings = Settings()

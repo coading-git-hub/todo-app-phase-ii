@@ -1,28 +1,38 @@
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Session
 from src.main import app
-from src.db.database import AsyncSessionLocal
+from src.db.session import SessionLocal, get_session
 from httpx import AsyncClient
+from fastapi.testclient import TestClient
 
 
-# Create test database engine
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 @pytest.fixture
-async def async_client():
+def client():
+    from sqlmodel import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from src.db.session import get_session
+
+    # Create in-memory test database engine for complete isolation
+    test_engine = create_engine("sqlite:///:memory:", echo=False)
+
     # Create tables in test database
-    engine = create_async_engine(TEST_DATABASE_URL)
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+    SQLModel.metadata.create_all(bind=test_engine)
 
-    # Create async session
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    # Create sessionmaker for test database
+    test_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
+    # Override the session dependency
+    def override_get_session():
+        with Session(test_engine) as session:
+            yield session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    with TestClient(app) as tc:
+        yield tc
 
     # Clean up
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
+    app.dependency_overrides.clear()  # Clear overrides after test

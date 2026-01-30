@@ -39,7 +39,7 @@ export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
     setIsDeleting(true);
     try {
       await apiClient.delete(`/tasks/${task.id}`);
-      onDelete(task.id);
+      onDelete(String(task.id));
     } catch (error) {
       console.error('Error deleting task:', error);
       setIsDeleting(false);

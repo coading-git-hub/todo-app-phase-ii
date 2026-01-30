@@ -6,11 +6,9 @@ from sqlmodel import SQLModel
 import os
 import sys
 
-# Add parent directory to path to import config
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from backend.src.models.user import User
-from backend.src.models.task import Task
-from backend.src.config import settings
+from src.models.user import User
+from src.models.task import Task
+from src.config import settings
 
 # this is the Alembic Config object
 config = context.config
@@ -21,8 +19,11 @@ database_url = settings.database_url
 if database_url.startswith("postgresql+asyncpg://"):
     # Convert asyncpg URL to regular postgresql for Alembic (uses psycopg2)
     database_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
+elif database_url.startswith("sqlite+aiosqlite://"):
+    # Convert aiosqlite URL to regular sqlite for Alembic
+    database_url = database_url.replace("sqlite+aiosqlite://", "sqlite://")
 elif database_url.startswith("sqlite"):
-    # Keep SQLite as-is for development
+    # Keep SQLite as-is for development if already in correct format
     pass
 config.set_main_option("sqlalchemy.url", database_url)
 

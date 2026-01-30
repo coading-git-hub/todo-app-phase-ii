@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from datetime import timedelta
-from ..services.auth import verify_password, create_access_token, hash_password
+from ..services.auth import verify_password, create_access_token, hash_password, get_user_by_email, create_user
 from ..models.user import UserCreate, UserSignIn, UserRead, User
-from ..db.database import get_async_session
+from ..db.database_async import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from ..utils.sanitization import sanitize_email
@@ -21,8 +21,7 @@ async def signup(user_create: UserCreate, session: AsyncSession = Depends(get_as
         sanitized_email = sanitize_email(user_create.email)
 
         # Check if user already exists
-        result = await session.execute(select(User).where(User.email == sanitized_email))
-        existing_user = result.scalar_one_or_none()
+        existing_user = await get_user_by_email(session, sanitized_email)
         if existing_user:
           logging.warning("Signup failed: email already exists: %s", sanitized_email)
           raise HTTPException(
@@ -30,12 +29,8 @@ async def signup(user_create: UserCreate, session: AsyncSession = Depends(get_as
             detail="Email already exists"
           )
 
-        # Create new user - need to use async session properly
-        hashed_password = hash_password(user_create.password)
-        db_user = User(email=sanitized_email, hashed_password=hashed_password)
-        session.add(db_user)
-        await session.commit()
-        await session.refresh(db_user)
+        # Create new user
+        db_user = await create_user(session, user_create)
 
         # Return user info without password
         return UserRead(
@@ -55,15 +50,28 @@ async def signup(user_create: UserCreate, session: AsyncSession = Depends(get_as
 @router.post("/signin", response_model=dict)
 async def signin(user_signin: UserSignIn, session: AsyncSession = Depends(get_async_session)):
     try:
+        logging.info("Signin attempt for email: %s", user_signin.email)
         # Sanitize email input
         sanitized_email = sanitize_email(user_signin.email)
+        logging.info("Sanitized email: %s", sanitized_email)
 
         # Get user from database
-        result = await session.execute(select(User).where(User.email == sanitized_email))
-        user = result.scalar_one_or_none()
+        user = await get_user_by_email(session, sanitized_email)
+        logging.info("User found in DB: %s", user is not None)
 
-        if not user or not verify_password(user_signin.password, user.hashed_password):
-          logging.warning("Invalid credentials for email: %s", sanitized_email)
+        if not user:
+            logging.warning("User not found for email: %s", sanitized_email)
+            raise HTTPException(
+              status_code=status.HTTP_401_UNAUTHORIZED,
+              detail="Invalid email or password",
+              headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        password_valid = verify_password(user_signin.password, user.hashed_password)
+        logging.info("Password verification result: %s", password_valid)
+
+        if not password_valid:
+          logging.warning("Invalid password for email: %s", sanitized_email)
           raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

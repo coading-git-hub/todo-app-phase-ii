@@ -3,10 +3,10 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 from src.main import app
 from src.models.user import User
-from src.db.database import get_async_session
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from src.db.session import get_session
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -15,8 +15,7 @@ def client():
         yield test_client
 
 
-@pytest.mark.asyncio
-async def test_signup_valid_user(client):
+def test_signup_valid_user(client):
     """Test signing up with valid credentials."""
     response = client.post(
         "/api/auth/signup",
@@ -28,8 +27,7 @@ async def test_signup_valid_user(client):
     assert data["email"] == "test@example.com"
 
 
-@pytest.mark.asyncio
-async def test_signup_duplicate_email(client):
+def test_signup_duplicate_email(client):
     """Test signing up with an already registered email."""
     # First signup should succeed
     client.post(
@@ -46,8 +44,7 @@ async def test_signup_duplicate_email(client):
     assert "already exists" in response.json()["detail"]
 
 
-@pytest.mark.asyncio
-async def test_signup_invalid_email_format(client):
+def test_signup_invalid_email_format(client):
     """Test signing up with invalid email format."""
     response = client.post(
         "/api/auth/signup",
@@ -56,8 +53,7 @@ async def test_signup_invalid_email_format(client):
     assert response.status_code == 422  # Validation error
 
 
-@pytest.mark.asyncio
-async def test_signup_weak_password(client):
+def test_signup_weak_password(client):
     """Test signing up with a weak password."""
     response = client.post(
         "/api/auth/signup",
@@ -66,8 +62,7 @@ async def test_signup_weak_password(client):
     assert response.status_code == 422  # Validation error
 
 
-@pytest.mark.asyncio
-async def test_signin_valid_credentials(client):
+def test_signin_valid_credentials(client):
     """Test signing in with valid credentials."""
     # First create a user
     client.post(
@@ -87,8 +82,7 @@ async def test_signin_valid_credentials(client):
     assert "user" in data
 
 
-@pytest.mark.asyncio
-async def test_signin_invalid_credentials(client):
+def test_signin_invalid_credentials(client):
     """Test signing in with invalid credentials."""
     # Create a user first
     client.post(
@@ -105,8 +99,7 @@ async def test_signin_invalid_credentials(client):
     assert "Invalid email or password" in response.json()["detail"]
 
 
-@pytest.mark.asyncio
-async def test_signin_nonexistent_user(client):
+def test_signin_nonexistent_user(client):
     """Test signing in with a nonexistent user."""
     response = client.post(
         "/api/auth/signin",
@@ -116,8 +109,7 @@ async def test_signin_nonexistent_user(client):
     assert "Invalid email or password" in response.json()["detail"]
 
 
-@pytest.mark.asyncio
-async def test_jwt_token_issuance(client):
+def test_jwt_token_issuance(client):
     """Test that JWT token is issued correctly after successful signin."""
     # Create a user
     signup_response = client.post(
@@ -139,8 +131,7 @@ async def test_jwt_token_issuance(client):
     assert data["access_token"] is not None
 
 
-@pytest.mark.asyncio
-async def test_jwt_token_verification(client):
+def test_jwt_token_verification(client):
     """Test that JWT token can be used to access protected endpoints."""
     # Create and sign in a user
     client.post(

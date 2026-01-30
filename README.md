@@ -1,31 +1,34 @@
-# Phase II Todo Full-Stack Web Application
+# AI-Powered Todo Chatbot (MCP + OpenAI Agents SDK)
 
-A secure, multi-user todo application with authentication, task management, and responsive UI.
-
-## Tech Stack
-
-- **Frontend**: Next.js 16+, TypeScript, Tailwind CSS, Framer Motion
-- **Backend**: Python 3.11+, FastAPI, SQLModel, JWT authentication
-- **Database**: Neon Serverless PostgreSQL
-- **Authentication**: JWT tokens with 7-day expiry
+An innovative todo application that allows users to manage their tasks through natural language interactions with an AI assistant. The system leverages OpenAI Agents SDK and Model Context Protocol (MCP) tools to process natural language requests and perform todo operations.
 
 ## Features
 
-- User registration and authentication
-- Secure JWT-based authentication
-- Personal task management (CRUD operations)
-- Responsive UI with smooth animations
-- Multi-user data isolation
-- Cross-user access prevention
+- **Natural Language Processing**: Interact with your todo list using everyday language
+- **AI-Powered**: Powered by OpenAI's advanced language models
+- **Secure Authentication**: JWT-based authentication with user data isolation
+- **Persistent Storage**: All tasks and conversations stored in PostgreSQL
+- **Real-time Interaction**: Instant responses to your natural language commands
 
-## Setup Instructions
+## Tech Stack
 
-### Prerequisites
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Database**: PostgreSQL with SQLModel ORM
+- **AI Integration**: OpenAI Agents SDK
+- **MCP Tools**: Model Context Protocol for AI tool integration
+- **Authentication**: JWT tokens with Better Auth
 
-- Node.js 18.x or higher
-- Python 3.11 or higher
-- Git
-- Neon PostgreSQL account
+### Frontend
+- **Framework**: Next.js 16+
+- **UI Components**: React with TypeScript
+- **Chat Interface**: Custom chat interface with OpenAI ChatKit integration
+
+## Architecture
+
+The application follows a stateless design where all conversation history and task data are persisted in Neon Serverless PostgreSQL. The backend exposes a single `/api/{user_id}/chat` endpoint that processes natural language input and routes appropriate actions through MCP tools for data operations.
+
+## Getting Started
 
 ### Backend Setup
 
@@ -50,7 +53,7 @@ A secure, multi-user todo application with authentication, task management, and 
    pip install -r requirements.txt
    ```
 
-4. Create `.env` file with your database and JWT configuration:
+4. Create `.env` file with your configuration:
    ```bash
    cp .env.example .env
    # Edit .env with your actual configuration
@@ -95,142 +98,41 @@ A secure, multi-user todo application with authentication, task management, and 
 
 5. Open your browser to `http://localhost:3000`
 
-## API Documentation
-
-The backend API documentation is available at `http://localhost:8000/docs` when the server is running.
-
 ## Environment Variables
 
 ### Backend (.env)
-
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret key for JWT signing (min 32 characters)
-- `JWT_EXPIRY_DAYS`: JWT token expiry in days (default: 7)
-- `CORS_ORIGINS`: Comma-separated list of allowed origins
+- `OPENAI_API_KEY`: OpenAI API key for AI agent functionality
+- `JWT_EXPIRE_DAYS`: JWT token expiry in days (default: 7)
 
 ### Frontend (.env.local)
-
 - `NEXT_PUBLIC_API_URL`: Backend API base URL
 - `NEXT_PUBLIC_APP_URL`: Frontend application URL
 
-## Development
+## API Endpoints
 
-### Running Tests
+- `POST /api/{user_id}/chat`: Process natural language chat message
+- `POST /api/auth/signup`: User registration
+- `POST /api/auth/signin`: User login
+- `GET /health`: Health check endpoint
 
-**Backend Tests**:
-```bash
-cd backend
-pytest --cov=src --cov-report=html
-```
+## MCP Tools
 
-**Frontend Tests**:
-```bash
-cd frontend
-npm run test
-```
+The system implements several MCP tools for AI agent interactions:
+- `add_task`: Create new tasks
+- `list_tasks`: Retrieve user's tasks
+- `complete_task`: Mark tasks as completed
+- `delete_task`: Remove tasks
+- `update_task`: Modify existing tasks
 
-### Code Formatting
+## Contributing
 
-**Backend**:
-```bash
-cd backend
-black src/
-mypy src/
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-**Frontend**:
-```bash
-cd frontend
-npm run lint
-npm run format
-```
+## License
 
-## Security Features
-
-- Passwords are hashed using bcrypt (min 10 rounds)
-- JWT tokens with proper expiry and validation
-- User data isolation (users can only access their own tasks)
-- Input validation and sanitization
-- CORS configured for secure cross-origin requests
-
-## Project Structure
-
-```
-todo-app-phase-ii/
-├── backend/
-│   ├── src/
-│   │   ├── models/          # SQLModel database models
-│   │   ├── services/        # Business logic
-│   │   ├── api/             # FastAPI route handlers
-│   │   ├── middleware/      # JWT authentication middleware
-│   │   ├── db/              # Database connection
-│   │   ├── config.py        # Environment configuration
-│   │   └── main.py          # FastAPI app entry point
-│   ├── tests/               # Backend tests
-│   ├── alembic/             # Database migrations
-│   ├── requirements.txt     # Python dependencies
-│   └── .env                 # Environment variables (not in git)
-│
-├── frontend/
-│   ├── src/
-│   │   ├── app/             # Next.js App Router pages
-│   │   ├── components/      # React components
-│   │   ├── lib/             # Utilities (API client, auth, types)
-│   │   └── styles/          # Global styles
-│   ├── package.json         # Node dependencies
-│   └── .env.local           # Environment variables (not in git)
-│
-└── specs/
-    └── todo-app-phase-ii/
-        ├── spec.md          # Feature specification
-        ├── plan.md          # Implementation plan
-        ├── research.md      # Technology research
-        ├── data-model.md    # Database schema
-        ├── quickstart.md    # Setup guide
-        └── contracts/       # API contracts (OpenAPI)
-```
-
-## End-to-End Flow
-
-1. **Sign Up**: Create an account with email and password
-2. **Sign In**: Authenticate and receive JWT token
-3. **Create Task**: Add new tasks to your personal list
-4. **View Tasks**: See all your tasks in a responsive grid
-5. **Update Task**: Edit task details or mark as completed
-6. **Delete Task**: Remove tasks you no longer need
-
-## Deployment
-
-### Backend Deployment (Railway/Fly.io)
-1. Create account on Railway or Fly.io
-2. Connect your GitHub repository
-3. Set environment variables in deployment settings:
-   - `DATABASE_URL`: Your Neon PostgreSQL connection string
-   - `JWT_SECRET`: Secure random string (32+ characters)
-   - `JWT_EXPIRY_DAYS`: 7
-   - `CORS_ORIGINS`: Your frontend URL (e.g., https://your-app.vercel.app)
-4. Deploy automatically from GitHub
-
-### Frontend Deployment (Vercel)
-1. Create account on Vercel
-2. Connect your GitHub repository
-3. Set environment variables in Vercel dashboard:
-   - `NEXT_PUBLIC_API_URL`: Your backend URL (e.g., https://your-backend.fly.dev)
-4. Deploy automatically from GitHub
-
-### Environment Variables Summary
-
-**Backend (.env):**
-- `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: Secret key for JWT
-- `JWT_EXPIRY_DAYS`: Token expiry (default: 7)
-- `CORS_ORIGINS`: Allowed frontend origins
-
-**Frontend (.env.local):**
-- `NEXT_PUBLIC_API_URL`: Backend API base URL
-
-## Troubleshooting
-
-- If you encounter CORS errors, ensure `CORS_ORIGINS` in backend `.env` includes your frontend URL
-- For database connection issues, verify your Neon PostgreSQL connection string
-- If authentication fails, check that JWT_SECRET matches between frontend and backend
+This project is licensed under the MIT License.

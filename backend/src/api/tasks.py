@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from datetime import datetime
@@ -7,12 +6,13 @@ from datetime import datetime
 from ..models.task import Task, TaskCreate, TaskUpdate, TaskRead
 from ..models.user import User
 from ..middleware.jwt_auth import verify_token
-from ..db.database import get_async_session
+from ..db.database_async import get_async_session
 from ..utils.sanitization import sanitize_title, sanitize_description
+from ..services.task_service import TaskService
 
 
 router = APIRouter(
-    prefix="/tasks",
+
     tags=["tasks"]
 )
 
@@ -25,10 +25,9 @@ async def get_tasks(
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    result = await session.execute(
-        select(Task).where(Task.user_id == current_user.id)
-    )
-    return result.scalars().all()
+    task_service = TaskService(session)
+    tasks = await task_service.get_user_tasks(current_user.id)
+    return tasks
 
 
 # =========================
@@ -56,16 +55,18 @@ async def create_task(
     if description and len(description) > 2000:
         raise HTTPException(status_code=400, detail="Description max 2000 characters")
 
-    task = Task(
+    # Create a new TaskCreate with sanitized data
+    sanitized_task_create = TaskCreate(
         title=title,
         description=description,
-        completed=False,
-        user_id=current_user.id
+        completed=task_create.completed
     )
 
-    session.add(task)
-    await session.commit()
-    await session.refresh(task)
+    task_service = TaskService(session)
+    task = await task_service.create_task(
+        sanitized_task_create,
+        current_user.id
+    )
 
     return task
 
@@ -75,44 +76,16 @@ async def create_task(
 # =========================
 @router.put("/{task_id}", response_model=TaskRead)
 async def update_task(
-    task_id: UUID,
+    task_id: int,
     task_update: TaskUpdate,
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    result = await session.execute(
-        select(Task)
-        .where(Task.id == task_id)
-        .where(Task.user_id == current_user.id)
-    )
-    task = result.scalar_one_or_none()
+    task_service = TaskService(session)
+    task = await task_service.update_task(task_id, task_update, current_user.id)
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    update_data = task_update.model_dump(exclude_unset=True)
-
-    if "title" in update_data:
-        title = sanitize_title(update_data["title"])
-        if not title.strip():
-            raise HTTPException(status_code=400, detail="Title cannot be empty")
-        if len(title) > 200:
-            raise HTTPException(status_code=400, detail="Title max 200 characters")
-        task.title = title
-
-    if "description" in update_data:
-        description = sanitize_description(update_data["description"])
-        if description and len(description) > 2000:
-            raise HTTPException(status_code=400, detail="Description max 2000 characters")
-        task.description = description
-
-    if "completed" in update_data:
-        task.completed = update_data["completed"]
-
-    task.updated_at = datetime.utcnow()
-
-    await session.commit()
-    await session.refresh(task)
 
     return task
 
@@ -122,19 +95,14 @@ async def update_task(
 # =========================
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
-    task_id: UUID,
+    task_id: int,
     current_user: User = Depends(verify_token),
     session: AsyncSession = Depends(get_async_session)
 ):
-    result = await session.execute(
-        select(Task)
-        .where(Task.id == task_id)
-        .where(Task.user_id == current_user.id)
-    )
-    task = result.scalar_one_or_none()
+    task_service = TaskService(session)
+    success = await task_service.delete_task(task_id, current_user.id)
 
-    if not task:
+    if not success:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    await session.delete(task)
-    await session.commit()
+    # Response is handled by status code for 204

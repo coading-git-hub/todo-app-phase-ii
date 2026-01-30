@@ -42,7 +42,7 @@ export function TaskList() {
   };
 
   const handleTaskDeleted = (deletedTaskId: string) => {
-    setTasks(tasks.filter(task => task.id !== deletedTaskId));
+    setTasks(tasks.filter(task => task.id !== parseInt(deletedTaskId, 10)));
   };
 
   const handleEditTask = (task: Task) => {

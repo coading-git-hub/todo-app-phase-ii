@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 import bcrypt
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
@@ -49,24 +50,26 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def authenticate_user(session: Session, email: str, password: str) -> Optional[User]:
+async def authenticate_user(session: AsyncSession, email: str, password: str) -> Optional[User]:
     """Authenticate a user by email and password."""
-    user = session.exec(select(User).where(User.email == email)).first()
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalars().first()
     if not user or not verify_password(password, user.hashed_password):
         return None
     return user
 
 
-def get_user_by_email(session: Session, email: str) -> Optional[User]:
+async def get_user_by_email(session: AsyncSession, email: str) -> Optional[User]:
     """Get a user by email."""
-    return session.exec(select(User).where(User.email == email)).first()
+    result = await session.execute(select(User).where(User.email == email))
+    return result.scalars().first()
 
 
-def create_user(session: Session, user_create: UserCreate) -> User:
+async def create_user(session: AsyncSession, user_create: UserCreate) -> User:
     """Create a new user with hashed password."""
     hashed_password = hash_password(user_create.password)
     db_user = User(email=user_create.email, hashed_password=hashed_password)
     session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    await session.commit()
+    await session.refresh(db_user)
     return db_user

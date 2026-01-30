@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '../components/ui/Button';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, CheckCircle, Shield, Zap, Users } from 'lucide-react';
+import { LogIn, UserPlus, CheckCircle, Shield, Zap, Users, MessageSquare } from 'lucide-react';
 
 export default function HomePage() {
   const features = [
@@ -78,6 +78,19 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.8 }}
               className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             >
+              <Link href="/chat">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    icon={MessageSquare}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transform transition-all duration-200 flex items-center"
+                  >
+                    <span className="mr-2">🤖</span> Try AI Assistant
+                  </Button>
+                </motion.div>
+              </Link>
               <Link href="/signin">
                 <Button
                   icon={LogIn}

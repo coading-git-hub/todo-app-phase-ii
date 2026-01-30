@@ -1,0 +1,1 @@
+# Frontend lib module initialization
