@@ -4,6 +4,11 @@ const nextConfig = {
 
   transpilePackages: ['better-auth'],
 
+  webpack: (config) => {
+    config.resolve.alias['@/lib/utils'] = require('path').resolve(__dirname, 'src/lib/utils');
+    return config;
+  },
+
   experimental: {
     serverActions: {
       allowedOrigins: [
