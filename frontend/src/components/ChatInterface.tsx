@@ -68,8 +68,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId }) => {
     } catch (error) {
       console.error('Error sending message:', error);
 
+      // Type guard to check if error is an object with a message property
+      const isErrorWithMessage = (error: unknown): error is {message?: string} => {
+        return typeof error === 'object' && error !== null && 'message' in error;
+      };
+
       // Check if it's an authentication error
-      if (error.message && error.message.includes('401')) {
+      if (isErrorWithMessage(error) && error.message && error.message.includes('401')) {
         // Token is invalid, clear localStorage and redirect to signin
         localStorage.removeItem('token');
         localStorage.removeItem('userEmail');
